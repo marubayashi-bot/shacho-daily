@@ -1,0 +1,824 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>社長用デイリーシート｜経営者版</title>
+<style>
+:root{
+  --navy:#10243f; --navy2:#1b3a63; --gold:#c9a24b; --gold2:#e3c474;
+  --bg:#f4f6f9; --card:#ffffff; --line:#e2e7ee; --ink:#1c2733; --muted:#6a7787;
+  --green:#1f9d6b; --red:#d8503f; --amber:#e0922f; --soft:#eef2f7;
+  --shadow:0 1px 3px rgba(16,36,63,.07),0 6px 18px rgba(16,36,63,.06);
+  --radius:14px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:"Yu Gothic UI","Hiragino Kaku Gothic ProN","Meiryo",system-ui,sans-serif;
+  background:var(--bg);color:var(--ink);line-height:1.6;-webkit-font-smoothing:antialiased;font-size:14px}
+button{font-family:inherit;cursor:pointer;border:none}
+input,textarea,select{font-family:inherit;font-size:14px;color:var(--ink)}
+textarea{resize:vertical}
+
+.appbar{background:linear-gradient(120deg,var(--navy),var(--navy2));color:#fff;padding:14px 20px;
+  position:sticky;top:0;z-index:50;box-shadow:0 2px 14px rgba(16,36,63,.18)}
+.appbar-in{max-width:1080px;margin:0 auto;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:10px}
+.brand .mark{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,var(--gold2),var(--gold));
+  display:grid;place-items:center;color:var(--navy);font-weight:800;font-size:18px}
+.brand h1{font-size:16px;font-weight:700;letter-spacing:.02em}
+.brand .sub{font-size:11px;color:#b9c7da;font-weight:400}
+.appbar .spacer{flex:1}
+.cal-status{display:flex;align-items:center;gap:7px;font-size:12px;background:rgba(255,255,255,.1);padding:6px 12px;border-radius:20px}
+.dot{width:8px;height:8px;border-radius:50%;background:#88a;flex:none}
+.dot.on{background:#46d39a;box-shadow:0 0 0 3px rgba(70,211,154,.25)}
+
+.nav{background:#fff;border-bottom:1px solid var(--line);position:sticky;top:62px;z-index:40}
+.nav-in{max-width:1080px;margin:0 auto;display:flex;gap:2px;overflow-x:auto;padding:0 12px}
+.nav button{background:none;padding:13px 15px;font-size:13.5px;font-weight:600;color:var(--muted);
+  border-bottom:3px solid transparent;white-space:nowrap}
+.nav button.active{color:var(--navy);border-bottom-color:var(--gold)}
+
+.wrap{max-width:1080px;margin:0 auto;padding:20px 16px 80px}
+.view{display:none}.view.active{display:block;animation:fade .25s}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+.datebar{display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap}
+.datebar .nav-btn{width:36px;height:36px;border-radius:9px;background:#fff;border:1px solid var(--line);font-size:16px;color:var(--navy);box-shadow:var(--shadow)}
+.datebar input[type=date]{padding:8px 12px;border:1px solid var(--line);border-radius:9px;background:#fff;box-shadow:var(--shadow)}
+.datebar .dow{font-weight:700;font-size:17px}
+.datebar .today-btn{padding:8px 14px;border-radius:9px;background:var(--navy);color:#fff;font-weight:600;font-size:12.5px}
+.theme-in{flex:1;min-width:220px;padding:9px 14px;border:1px solid var(--line);border-radius:9px;background:#fff;box-shadow:var(--shadow);font-weight:600}
+
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);margin-bottom:16px;overflow:hidden}
+.card-h{display:flex;align-items:center;gap:10px;padding:13px 18px;border-bottom:1px solid var(--line);background:#fbfcfe}
+.card-h.click{cursor:pointer}
+.card-h .ic{font-size:15px}
+.card-h h2{font-size:14.5px;font-weight:700;color:var(--navy)}
+.card-h .hint{font-size:11.5px;color:var(--muted);font-weight:400}
+.card-h .toggle{margin-left:auto;color:var(--muted);transition:.2s}
+.card.collapsed .card-b{display:none}
+.card.collapsed .toggle{transform:rotate(-90deg)}
+.card-b{padding:16px 18px}
+
+.section-title{font-size:13px;font-weight:700;color:var(--gold);letter-spacing:.06em;margin:22px 0 10px;display:flex;align-items:center;gap:8px}
+.section-title::before{content:"";width:18px;height:2px;background:var(--gold)}
+
+.brief{background:linear-gradient(160deg,#fbfcff,#f3f6fb);border:1px solid #dde6f2}
+.brief .card-h{background:linear-gradient(120deg,var(--navy),var(--navy2));border-bottom:none}
+.brief .card-h h2,.brief .card-h .hint,.brief .card-h .ic{color:#fff}
+.brief .card-h .hint{color:#b9c7da}
+.bblock{background:#fff;border:1px solid var(--line);border-radius:11px;padding:13px 15px;margin-bottom:14px}
+.brief-sub{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+@media(max-width:780px){.brief-sub{grid-template-columns:1fr}}
+.brief-sub .bblock{margin-bottom:0}
+.bblock h3{font-size:12.5px;font-weight:700;color:var(--navy);margin-bottom:9px;display:flex;align-items:center;gap:7px}
+.bblock h3 .n{width:20px;height:20px;border-radius:6px;background:var(--soft);color:var(--navy);display:grid;place-items:center;font-size:11px}
+.ev{display:flex;gap:10px;padding:9px 0;border-bottom:1px dashed var(--line);font-size:13px}
+.ev:last-child{border-bottom:none}
+.ev .t{font-weight:700;color:var(--navy2);white-space:nowrap;font-variant-numeric:tabular-nums}
+.ev .body{flex:1}
+.ev .ttl{font-weight:600}
+.ev .meta{font-size:11px;color:var(--muted)}
+.badge{display:inline-block;font-size:10px;font-weight:700;padding:1px 7px;border-radius:10px;margin-left:6px}
+.badge.imp{background:#fdecec;color:var(--red)}
+.gg-in{width:100%;margin-top:5px;padding:5px 9px;border:1px solid var(--line);border-radius:7px;font-size:12px;background:#fafbfd}
+.gg-in.goal{border-left:3px solid var(--gold)}
+.gg-in.give{border-left:3px solid var(--green)}
+.empty{color:var(--muted);font-size:12.5px;padding:6px 0}
+.brief-edit{width:100%;border:1px dashed var(--line);border-radius:8px;padding:8px 10px;font-size:12.5px;background:#fafbfd;min-height:56px}
+.brief-actions{display:flex;gap:8px;margin-top:4px;flex-wrap:wrap}
+.toggle-imp{font-size:11px;padding:1px 8px;border-radius:10px;background:var(--soft);color:var(--navy);margin-left:6px}
+
+.ditem{border:1px solid var(--line);border-radius:12px;margin-bottom:12px;overflow:hidden}
+.ditem-h{display:flex;align-items:center;gap:10px;padding:11px 15px;background:#fbfcfe;cursor:pointer;flex-wrap:wrap}
+.ditem-h .num{width:26px;height:26px;border-radius:8px;background:var(--navy);color:#fff;display:grid;place-items:center;font-weight:800;font-size:13px;flex:none}
+.ditem-h .lab{font-weight:700;font-size:13.5px;color:var(--navy)}
+.ditem-h .sub{font-size:11px;color:var(--muted);flex-basis:100%}
+.ditem-h .right{margin-left:auto;display:flex;gap:7px;align-items:center}
+.ditem-b{padding:13px 15px;display:none}
+.ditem.open .ditem-b{display:block}
+.ditem.done{opacity:.66}
+.chev{transition:.2s;color:var(--muted)}
+.ditem.open .chev{transform:rotate(90deg)}
+.pill{font-size:11px;font-weight:700;padding:3px 10px;border-radius:14px;border:1px solid transparent}
+.pill.st-未着手{background:#eef1f5;color:#5a6675}
+.pill.st-進行中{background:#e7f0fd;color:#2f6fd0}
+.pill.st-完了{background:#e6f6ee;color:var(--green)}
+.pill.st-要相談{background:#fdeede;color:var(--amber)}
+.pill.imp-高{background:#fdecec;color:var(--red)}
+.pill.imp-中{background:#fff4dd;color:var(--amber)}
+.pill.imp-低{background:#eef1f5;color:#5a6675}
+.fld{margin-bottom:11px}
+.fld label{display:block;font-size:11.5px;font-weight:600;color:var(--muted);margin-bottom:5px}
+.fld textarea,.fld input{width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;background:#fff}
+.fld textarea{min-height:60px}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:11px}
+@media(max-width:560px){.row2{grid-template-columns:1fr}}
+.mini-sel{padding:6px 9px;border:1px solid var(--line);border-radius:8px;background:#fff;font-size:12px;font-weight:600}
+
+.q6{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:680px){.q6{grid-template-columns:1fr}}
+
+.tbl-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{padding:9px 10px;text-align:left;border-bottom:1px solid var(--line);vertical-align:top}
+th{background:#fbfcfe;font-weight:700;color:var(--navy);font-size:12px;white-space:nowrap}
+td input,td textarea,td select{width:100%;border:1px solid transparent;background:transparent;padding:5px 6px;border-radius:6px}
+td input:focus,td textarea:focus,td select:focus{border-color:var(--line);background:#fff;outline:none}
+td textarea{min-height:36px;resize:vertical}
+.tnum{font-weight:800;color:var(--navy);text-align:center;width:32px}
+.add-row{margin-top:10px;padding:8px 16px;border-radius:9px;background:var(--soft);color:var(--navy);font-weight:600;font-size:12.5px}
+.del-btn{background:none;color:var(--muted);font-size:16px;padding:2px 6px;border-radius:6px}
+.del-btn:hover{color:var(--red);background:#fdecec}
+
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px}
+@media(max-width:680px){.kpis{grid-template-columns:repeat(2,1fr)}}
+.kpi{background:#fff;border:1px solid var(--line);border-radius:13px;padding:15px;box-shadow:var(--shadow);text-align:center}
+.kpi .v{font-size:30px;font-weight:800;color:var(--navy);line-height:1}
+.kpi.alert .v{color:var(--red)}.kpi.ok .v{color:var(--green)}
+.kpi .l{font-size:11.5px;color:var(--muted);margin-top:6px;font-weight:600}
+.five{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
+@media(max-width:780px){.five{grid-template-columns:repeat(2,1fr)}}
+.fitem{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px;box-shadow:var(--shadow)}
+.fitem .num{width:26px;height:26px;border-radius:8px;background:linear-gradient(135deg,var(--gold2),var(--gold));color:var(--navy);display:grid;place-items:center;font-weight:800;margin-bottom:9px}
+.fitem h4{font-size:13px;color:var(--navy);margin-bottom:5px}
+.fitem p{font-size:11.5px;color:var(--muted)}
+
+.purpose-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:720px){.purpose-grid{grid-template-columns:1fr}}
+.pcol h3{font-size:13px;font-weight:700;color:var(--navy);margin-bottom:12px;padding-bottom:8px;border-bottom:2px solid var(--gold)}
+.daily-read{display:inline-block;font-size:10px;font-weight:700;color:var(--gold);background:#fff7e6;border:1px solid var(--gold2);padding:2px 9px;border-radius:12px;margin-left:8px;vertical-align:middle}
+.month-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:14px}
+@media(max-width:680px){.month-grid{grid-template-columns:1fr}}
+.month-box{background:#fbfcfe;border:1px solid var(--line);border-radius:10px;padding:12px}
+.month-box input.ml{font-weight:700;color:var(--navy);border:none;border-bottom:1px solid var(--line);width:100%;padding:4px;margin-bottom:8px;background:transparent}
+.month-box textarea{width:100%;border:1px solid var(--line);border-radius:8px;padding:8px;min-height:60px;background:#fff;font-size:12.5px}
+
+.help{background:#fbfcfe;border:1px solid var(--line);border-radius:11px;padding:14px 16px;font-size:13px;margin-bottom:14px}
+.help b{color:var(--navy)}.help ol{margin:8px 0 0 18px}.help li{margin-bottom:5px}
+.btn{padding:10px 18px;border-radius:10px;font-weight:700;font-size:13px}
+.btn-pri{background:linear-gradient(135deg,var(--navy),var(--navy2));color:#fff}
+.btn-gold{background:linear-gradient(135deg,var(--gold2),var(--gold));color:var(--navy)}
+.btn-out{background:#fff;border:1px solid var(--line);color:var(--navy)}
+.btn-ghost{background:var(--soft);color:var(--navy)}
+.inp{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:9px;background:#fff}
+.how th{width:120px}
+.toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--navy);color:#fff;padding:11px 22px;border-radius:30px;font-size:13px;font-weight:600;opacity:0;transition:.3s;z-index:99;box-shadow:0 8px 24px rgba(16,36,63,.3)}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.foot{text-align:center;color:var(--muted);font-size:11px;margin-top:30px}
+</style>
+</head>
+<body>
+
+<div class="appbar"><div class="appbar-in">
+  <div class="brand"><div class="mark">経</div>
+    <div><h1>社長用デイリーシート</h1>
+      <div class="sub">経営者版 ｜ 目的 → 四半期 → 今日の判断 → 振り返り</div></div></div>
+  <div class="spacer"></div>
+  <div class="cal-status" id="calStatus"><span class="dot" id="calDot"></span><span id="calLabel">カレンダー未連携</span></div>
+</div></div>
+
+<div class="nav"><div class="nav-in" id="nav">
+  <button class="active" data-v="today">今日</button>
+  <button data-v="purpose">目的・目標</button>
+  <button data-v="dash">ダッシュボード</button>
+  <button data-v="weekly">週次レビュー</button>
+  <button data-v="stalled">停滞案件</button>
+  <button data-v="problem">問題解決</button>
+  <button data-v="calendar">カレンダー連携</button>
+  <button data-v="how">使い方</button>
+</div></div>
+
+<div class="wrap">
+
+<!-- ============ TODAY ============ -->
+<div class="view active" id="view-today">
+  <div class="datebar">
+    <button class="nav-btn" id="prevDay">‹</button>
+    <input type="date" id="datePick">
+    <button class="nav-btn" id="nextDay">›</button>
+    <span class="dow" id="dowLabel"></span>
+    <button class="today-btn" id="goToday">今日へ</button>
+    <input class="theme-in" id="theme" placeholder="本日の経営テーマ（例：20日超過ゼロ／幹部に任せる日）">
+  </div>
+
+  <div class="card brief">
+    <div class="card-h"><span class="ic">🌅</span><h2>朝の経営ブリーフィング</h2>
+      <span class="hint">5:30の自動配信と同じ内容。カレンダー連携で予定が入ります</span></div>
+    <div class="card-b">
+      <div class="bblock">
+        <h3><span class="n">1</span>今日の仕事 ｜ 予定・ゴールイメージ・GIVE</h3>
+        <div id="bSchedule"><div class="empty">「カレンダーを同期」すると、各予定にゴールとGIVEを書き込めます</div></div>
+      </div>
+      <div class="brief-sub">
+        <div class="bblock"><h3><span class="n">2</span>最重要アクション候補</h3>
+          <div id="bActionCands"><div class="empty">停滞案件・重要会議から自動提案します</div></div></div>
+        <div class="bblock"><h3><span class="n">3</span>相談すべき人</h3>
+          <textarea class="brief-edit" id="bConsult" placeholder="今日のうちに話すべき相手"></textarea>
+          <div id="bConsultHint" class="empty" style="margin-top:6px"></div></div>
+        <div class="bblock"><h3><span class="n">4</span>注意すべき停滞案件</h3>
+          <div id="bStalled"><div class="empty">「停滞案件」タブで登録すると超過日数順に表示</div></div></div>
+      </div>
+      <div class="brief-actions">
+        <button class="btn btn-pri" id="syncCalBtn">📅 カレンダーを同期</button>
+        <button class="btn btn-out" id="copyBriefBtn">📋 ブリーフィングをコピー</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-title">朝5分｜今日の経営判断</div>
+  <div id="decisions"></div>
+
+  <div class="card collapsed" id="bestCard">
+    <div class="card-h click"><span class="ic">💡</span><h2>今日の最高のイメージ（深掘り6問）</h2>
+      <span class="hint">余裕がある朝に。ゴールから逆算して今日を設計する</span>
+      <span class="toggle">▾</span></div>
+    <div class="card-b">
+      <div class="q6">
+        <div class="fld"><label>① 今日1日が終わった時、どんな仕事ができれば年間・四半期・今月・今週のゴールに確実に到達するか</label><textarea data-best="q1"></textarea></div>
+        <div class="fld"><label>② 今月・来月の成果を確かにする上で、今日実行しておくと価値あるアクションは何か</label><textarea data-best="q2"></textarea></div>
+        <div class="fld"><label>③ アクションはどのくらい見えているか。見えていないところは何か</label><textarea data-best="q3"></textarea></div>
+        <div class="fld"><label>④ 幹部・社員・クライアントがびっくりするために、今日できる工夫は何か</label><textarea data-best="q4"></textarea></div>
+        <div class="fld"><label>⑤ どうすれば見えるか。誰に相談すれば視界がさらに良くなるか</label><textarea data-best="q5"></textarea></div>
+        <div class="fld"><label>⑥ 繰り返し起きている失敗は何か。どう防ぐか（仕組みに変える）</label><textarea data-best="q6"></textarea></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-h"><span class="ic">🎯</span><h2>今日の最重要アクション 3つ</h2>
+      <span class="hint">予定表ではなく、会社のボトルネックを動かす行動だけ</span></div>
+    <div class="card-b">
+      <div class="tbl-wrap"><table id="top3Tbl">
+        <thead><tr><th>No</th><th>分類</th><th style="min-width:180px">内容</th><th>担当/相手</th><th>期限</th><th>状態</th><th>重要度</th><th style="min-width:120px">結果・次に活かすこと</th><th></th></tr></thead>
+        <tbody id="top3Body"></tbody>
+      </table></div>
+      <button class="add-row" id="addTop3">＋ 行を追加</button>
+    </div>
+  </div>
+
+  <div class="section-title">夕方3分｜振り返り</div>
+  <div class="card"><div class="card-b">
+    <div class="fld"><label>① 今日、会社は前に進んだか</label><textarea id="ev1" placeholder="前進した点／止まった点を一言で"></textarea></div>
+    <div class="fld"><label>② 今日、誰の成長を支援できたか</label><textarea id="ev2" placeholder="関わった相手と、渡したもの"></textarea></div>
+    <div class="fld"><label>③ 同じ問題を繰り返さない仕組みに変えること</label><textarea id="ev3" placeholder="個人の頑張りではなく、仕組み・ルールに落とす"></textarea></div>
+    <div class="fld"><label>④ 明日の最重要アクション</label><textarea id="ev4" placeholder="明日の朝、迷わないように一点だけ"></textarea></div>
+  </div></div>
+</div>
+
+<!-- ============ PURPOSE ============ -->
+<div class="view" id="view-purpose">
+  <div class="card"><div class="card-h"><span class="ic">🧭</span><h2>人生・仕事の目的と目標</h2>
+    <span class="daily-read">毎日読む</span>
+    <span class="hint" style="margin-left:auto">一度書いたら毎朝読み返す。日付に関係なく保存されます</span></div>
+    <div class="card-b"><div class="purpose-grid">
+      <div class="pcol"><h3>人生について</h3>
+        <div class="fld"><label>人生のミッションは何か</label><textarea data-pp="life_mission"></textarea></div>
+        <div class="fld"><label>死んだ後、どのような人として記憶されたいか</label><textarea data-pp="life_legacy"></textarea></div>
+        <div class="fld"><label>価値観は何か（頼まれてもいないのにしてしまうこと）</label><textarea data-pp="life_values"></textarea></div>
+        <div class="fld"><label>現在の総資産はいくらか</label><input data-pp="life_asset_now"></div>
+        <div class="fld"><label>60歳までにいくらになっていると価値があるか</label><input data-pp="life_asset_60"></div>
+        <div class="fld"><label>この1年でいくらになっていると価値があるか</label><input data-pp="life_asset_year"></div>
+      </div>
+      <div class="pcol"><h3>仕事について</h3>
+        <div class="fld"><label>仕事をする目的は何か</label><textarea data-pp="work_purpose"></textarea></div>
+        <div class="fld"><label>5年後の目標は何か</label><textarea data-pp="work_5y"></textarea></div>
+        <div class="fld"><label>この1年間の目標は何か</label><textarea data-pp="work_1y"></textarea></div>
+        <div class="fld"><label>なぜこの目標に到達する必要があるか（目的）</label><textarea data-pp="work_why"></textarea></div>
+        <div class="fld"><label>到達することは、誰のどんな役に立つか</label><textarea data-pp="work_for"></textarea></div>
+        <div class="fld"><label>手に入らないと、どんな壮絶な人生が想像できるか</label><textarea data-pp="work_pain"></textarea></div>
+      </div>
+    </div></div>
+  </div>
+
+  <div class="card"><div class="card-h"><span class="ic">📆</span><h2>四半期の目的と目標</h2>
+    <span class="daily-read">毎日読む</span></div>
+    <div class="card-b">
+      <div class="fld"><label>この3ヶ月間、何を意図して仕事をするか</label><textarea data-pp="q_intent"></textarea></div>
+      <div class="month-grid" id="monthGrid"></div>
+      <div class="section-title" style="margin-top:6px">KGI / KPI</div>
+      <div class="tbl-wrap"><table id="kgiTbl">
+        <thead><tr><th style="width:70px">区分</th><th style="min-width:160px">指標</th><th style="min-width:120px">今期目標</th><th style="min-width:120px">現在の結果</th><th></th></tr></thead>
+        <tbody id="kgiBody"></tbody>
+      </table></div>
+      <button class="add-row" id="addKgi">＋ 指標を追加</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ DASHBOARD ============ -->
+<div class="view" id="view-dash">
+  <div class="kpis">
+    <div class="kpi"><div class="v" id="kTotal">0</div><div class="l">最重要アクション数</div></div>
+    <div class="kpi ok"><div class="v" id="kDone">0</div><div class="l">完了数</div></div>
+    <div class="kpi"><div class="v" id="kOpen">0</div><div class="l">未完了/要相談</div></div>
+    <div class="kpi alert"><div class="v" id="kHigh">0</div><div class="l">高重要度 未完了</div></div>
+  </div>
+  <div class="card"><div class="card-h"><span class="ic">📌</span><h2>社長が毎朝見る5項目</h2></div>
+    <div class="card-b"><div class="five">
+      <div class="fitem"><div class="num">1</div><h4>数字</h4><p>売上・MQ・入金・PH・20日超過・採用・資金の異常値を見る</p></div>
+      <div class="fitem"><div class="num">2</div><h4>停滞</h4><p>会社のボトルネックだけを見る</p></div>
+      <div class="fitem"><div class="num">3</div><h4>意思決定</h4><p>自分が決めないと止まるものを決める</p></div>
+      <div class="fitem"><div class="num">4</div><h4>人への関わり</h4><p>誰をエンパワーするか決める</p></div>
+      <div class="fitem"><div class="num">5</div><h4>やらないこと</h4><p>部門長の仕事を奪わない</p></div>
+    </div></div>
+  </div>
+  <div class="card"><div class="card-h"><span class="ic">📈</span><h2>本日のステータス内訳</h2></div>
+    <div class="card-b"><div class="tbl-wrap"><table>
+      <thead><tr><th>状態</th><th>件数</th></tr></thead>
+      <tbody>
+        <tr><td>完了</td><td id="sDone">0</td></tr>
+        <tr><td>進行中</td><td id="sProg">0</td></tr>
+        <tr><td>未着手</td><td id="sNot">0</td></tr>
+        <tr><td>要相談</td><td id="sCons">0</td></tr>
+        <tr><td>高重要度 未完了</td><td id="sHigh">0</td></tr>
+      </tbody>
+    </table></div></div>
+  </div>
+</div>
+
+<!-- ============ WEEKLY ============ -->
+<div class="view" id="view-weekly">
+  <div class="card"><div class="card-h"><span class="ic">🗂</span><h2>週次レビュー｜社長用</h2>
+    <span class="hint">毎日の経営判断を、週単位で成果・仕組み・幹部育成に変える</span></div>
+    <div class="card-b">
+      <div class="datebar" style="margin-bottom:14px">
+        <button class="nav-btn" id="prevWeek">‹</button>
+        <span class="dow" id="weekLabel"></span>
+        <button class="nav-btn" id="nextWeek">›</button>
+        <button class="today-btn" id="thisWeek">今週へ</button>
+      </div>
+      <div class="tbl-wrap"><table>
+        <thead><tr><th style="min-width:120px">区分</th><th style="min-width:150px">内容</th></tr></thead>
+        <tbody>
+          <tr><td>売上/MQの前進</td><td><textarea data-wk="w1"></textarea></td></tr>
+          <tr><td>20日超過・停滞</td><td><textarea data-wk="w2"></textarea></td></tr>
+          <tr><td>決めたこと</td><td><textarea data-wk="w3"></textarea></td></tr>
+          <tr><td>任せたこと</td><td><textarea data-wk="w4"></textarea></td></tr>
+          <tr><td>エンパワーした人</td><td><textarea data-wk="w5"></textarea></td></tr>
+          <tr><td>仕組みに変えたこと</td><td><textarea data-wk="w6"></textarea></td></tr>
+          <tr><td>来週の一点突破</td><td><textarea data-wk="w7"></textarea></td></tr>
+        </tbody>
+      </table></div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ STALLED ============ -->
+<div class="view" id="view-stalled">
+  <div class="card"><div class="card-h"><span class="ic">⚠️</span><h2>停滞案件リスト</h2>
+    <span class="hint">20日超過は朝のブリーフィングに自動で赤表示</span></div>
+    <div class="card-b">
+      <div class="tbl-wrap"><table>
+        <thead><tr><th style="min-width:150px">案件名</th><th>担当/部門</th><th>経過日数</th><th style="min-width:160px">状況・次の一手</th><th></th></tr></thead>
+        <tbody id="stalledBody"></tbody>
+      </table></div>
+      <button class="add-row" id="addStalled">＋ 停滞案件を追加</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ PROBLEM ============ -->
+<div class="view" id="view-problem">
+  <div class="card"><div class="card-h"><span class="ic">🧩</span><h2>問題解決フレーム</h2>
+    <span class="hint">止まっている問題を、構造で分解して必ず解く</span></div>
+    <div class="card-b">
+      <div class="row2" style="margin-bottom:6px">
+        <div class="fld"><label>取り上げる問題（タイトル）</label><input data-pb="title" placeholder="例：関東アセットの停滞、内定者フォローの離脱"></div>
+        <div class="fld"><label>記入日</label><input type="date" data-pb="date"></div>
+      </div>
+      <div class="q6">
+        <div>
+          <div class="fld"><label>問題は何か。紙に書き出すといくつに分けられるか。それは何か</label><textarea data-pb="p1"></textarea></div>
+          <div class="fld"><label>誰に相談すると解決するか</label><textarea data-pb="p2"></textarea></div>
+          <div class="fld"><label>その人ならどんな解決策を出すか</label><textarea data-pb="p3"></textarea></div>
+          <div class="fld"><label>どうすれば絶対に解決するか</label><textarea data-pb="p4"></textarea></div>
+          <div class="fld"><label>その領域の原理原則・正しいやり方は何か</label><textarea data-pb="p5"></textarea></div>
+          <div class="fld"><label>どこを実践していて、どこを見落としているか</label><textarea data-pb="p6"></textarea></div>
+        </div>
+        <div>
+          <div class="fld"><label>問題を引き起こしている問題は何か</label><textarea data-pb="q1"></textarea></div>
+          <div class="fld"><label>調べる価値ある情報：社内トップパフォーマーは何をしているか</label><textarea data-pb="q2"></textarea></div>
+          <div class="fld"><label>調べる価値ある情報：同業他社のトップは何をしているか</label><textarea data-pb="q3"></textarea></div>
+          <div class="fld"><label>調べる価値ある情報：異業種のトップは何をしているか</label><textarea data-pb="q4"></textarea></div>
+          <div class="fld"><label>今の仕事における前提条件は何か</label><textarea data-pb="q5"></textarea></div>
+          <div class="fld"><label>同じことを繰り返さないために変えること（ステップ・ツール・トーク・言動）</label><textarea data-pb="q6"></textarea></div>
+        </div>
+      </div>
+      <div class="brief-actions"><button class="btn btn-out" id="copyProblem">📋 内容をコピー</button>
+        <button class="btn btn-ghost" id="clearProblem">新しい問題で書き直す</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ CALENDAR ============ -->
+<div class="view" id="view-calendar">
+  <div class="card"><div class="card-h"><span class="ic">📅</span><h2>Googleカレンダー連携</h2></div>
+    <div class="card-b">
+      <div class="help"><b>連携の準備（初回のみ）</b>
+        <ol>
+          <li>Google Cloud Console でプロジェクトを作成し「Google Calendar API」を有効化</li>
+          <li>「OAuth 同意画面」を設定（テストユーザーに社長のGoogleアカウントを追加）</li>
+          <li>「認証情報」→ OAuthクライアントID（種類：<b>ウェブアプリケーション</b>）を作成</li>
+          <li>「承認済みのJavaScript生成元」にこのアプリのURL（例：<code>https://marubayashi-bot.github.io</code>）を追加</li>
+          <li>発行された<b>クライアントID</b>を下に貼り付けて保存</li>
+        </ol>
+      </div>
+      <div class="fld"><label>OAuth クライアントID</label>
+        <input class="inp" id="clientId" placeholder="xxxxxxxx.apps.googleusercontent.com"></div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:6px">
+        <button class="btn btn-ghost" id="saveClientId">クライアントIDを保存</button>
+        <button class="btn btn-gold" id="connectBtn">🔗 Googleアカウントと接続</button>
+        <button class="btn btn-out" id="syncBtn2">📅 今日の予定を同期</button>
+        <button class="btn btn-out" id="disconnectBtn">接続解除</button>
+      </div>
+      <p style="font-size:12px;color:var(--muted);margin-top:12px">
+        ※ クライアントIDはこの端末のブラウザ内にのみ保存されます。<br>
+        ※「毎朝5:30に無人で自動配信」したい場合は、別ファイルの <b>Google Apps Script</b> をご利用ください（Chatworkに自動投稿）。</p>
+    </div>
+  </div>
+  <div class="card"><div class="card-h"><span class="ic">⚙️</span><h2>同期した今日の予定</h2></div>
+    <div class="card-b"><div id="calRaw"><div class="empty">まだ同期されていません</div></div></div>
+  </div>
+</div>
+
+<!-- ============ HOW TO ============ -->
+<div class="view" id="view-how">
+  <div class="card"><div class="card-h"><span class="ic">📖</span><h2>使い方</h2></div>
+    <div class="card-b"><div class="tbl-wrap"><table class="how">
+      <thead><tr><th>タイミング</th><th>やること</th></tr></thead>
+      <tbody>
+        <tr><td>はじめに</td><td>「目的・目標」タブに、人生・仕事の目的と四半期KGI/KPIを記入（毎朝読み返す土台）。</td></tr>
+        <tr><td>朝5分</td><td>ブリーフィングで予定・停滞を確認 → ①数字〜⑥やらないこと を記入 → 最重要アクション3つを決める。</td></tr>
+        <tr><td>日中</td><td>最重要アクション3つだけを追う。予定表ではなく、経営のボトルネック管理。</td></tr>
+        <tr><td>夕方3分</td><td>会社が前に進んだか／誰の成長を支援したか／仕組みに変えること を記入。</td></tr>
+        <tr><td>詰まったら</td><td>「問題解決」タブで構造分解。誰に相談・前提・トップパフォーマーの動きを言語化。</td></tr>
+        <tr><td>週次</td><td>週次レビューに転記。成果・停滞・決めたこと・任せたことを確認。</td></tr>
+      </tbody>
+    </table></div>
+    <div class="help" style="margin-top:16px"><b>データの保存について</b><br>
+      入力はこの端末のブラウザ（localStorage）に保存されます（日付ごとのシート＋目的/四半期/問題解決は共通保存）。
+      複数端末で同期したい場合は、後からSupabase連携に拡張できます。</div>
+    </div>
+  </div>
+</div>
+
+<div class="foot">社長用デイリーシート ｜ 経営者版 ｜ 株式会社アースコム</div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<script>
+/* ================= State ================= */
+const KEY='shacho_daily_v2';
+const DOW=['日','月','火','水','木','金','土'];
+let store=load();
+function load(){try{const s=JSON.parse(localStorage.getItem(KEY));return s?migrate(s):blank()}catch(e){return blank()}}
+function blank(){return{sheets:{},weekly:{},stalled:[],purpose:{},quarter:{months:[],kgi:[]},problem:{},
+  settings:{clientId:''},cal:{events:[],important:{},goals:{},gives:{},syncedDate:null}}}
+function migrate(s){const b=blank();return Object.assign(b,s,{cal:Object.assign(b.cal,s.cal||{}),
+  purpose:s.purpose||{},quarter:s.quarter||{months:[],kgi:[]},problem:s.problem||{}});}
+function save(){localStorage.setItem(KEY,JSON.stringify(store));}
+function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1800);}
+
+const DECISIONS=[
+ {n:'①',label:'今日見るべき数字',sub:'売上／MQ／入金／PH／20日超過／採用／資金／部門別異常値',imp:'高'},
+ {n:'②',label:'今日、絶対に動かす案件・部門・人',sub:'会社のボトルネック。誰が・何を・いつまでに動かすか。',imp:'高'},
+ {n:'③',label:'今日、社長が決めること',sub:'判断待ちで止まっているもの。決める・任せる・保留を明確に。',imp:'高'},
+ {n:'④',label:'今日、誰をエンパワーするか',sub:'誰に期待・強み・感謝・方向性を伝えるか。',imp:'中'},
+ {n:'⑤',label:'今日、社員に伝える一言',sub:'朝礼／Chatwork／会議で使う短いメッセージ。',imp:'中'},
+ {n:'⑥',label:'今日、社長がやらないこと',sub:'部門長の仕事を奪わない。細部に入りすぎない。感情で指摘しない。',imp:'中'},
+];
+const STATUS=['未着手','進行中','完了','要相談'];
+const IMP=['高','中','低'];
+const CLASSES=['','数字','停滞','意思決定','エンパワー','仕組み化','採用','営業','その他'];
+
+/* ================= Date helpers ================= */
+let curDate=todayStr();
+function todayStr(){return new Date().toISOString().slice(0,10);}
+function fmtDow(s){return DOW[new Date(s+'T00:00:00').getDay()];}
+function getSheet(d){if(!store.sheets[d])store.sheets[d]={theme:'',dec:{},top3:[],ev:{},best:{},brief:{consult:''}};
+  const s=store.sheets[d];s.dec=s.dec||{};s.top3=s.top3||[];s.ev=s.ev||{};s.best=s.best||{};s.brief=s.brief||{consult:''};return s;}
+function shift(d,n){const x=new Date(d+'T00:00:00');x.setDate(x.getDate()+n);return x.toISOString().slice(0,10);}
+
+let curWeek=weekKey(new Date());
+function weekKey(d){const t=new Date(d);const day=(t.getDay()+6)%7;t.setDate(t.getDate()-day);return t.toISOString().slice(0,10);}
+function weekLabel(k){const s=new Date(k+'T00:00:00');const e=new Date(s);e.setDate(e.getDate()+6);
+  const f=x=>(x.getMonth()+1)+'/'+x.getDate();return f(s)+' 〜 '+f(e)+' の週';}
+function esc(s){return(s||'').replace(/"/g,'&quot;');}
+
+/* ================= Nav ================= */
+document.getElementById('nav').addEventListener('click',e=>{
+  if(e.target.tagName!=='BUTTON')return;
+  document.querySelectorAll('#nav button').forEach(b=>b.classList.remove('active'));
+  e.target.classList.add('active');
+  const v=e.target.dataset.v;
+  document.querySelectorAll('.view').forEach(x=>x.classList.remove('active'));
+  document.getElementById('view-'+v).classList.add('active');
+  if(v==='dash')renderDash();
+  if(v==='stalled')renderStalled();
+  if(v==='weekly')renderWeekly();
+  if(v==='purpose')renderPurpose();
+  if(v==='problem')renderProblem();
+  window.scrollTo(0,0);
+});
+
+/* collapsible cards */
+document.addEventListener('click',e=>{const h=e.target.closest('.card-h.click');if(h)h.parentElement.classList.toggle('collapsed');});
+
+/* ================= Today ================= */
+function renderToday(){
+  document.getElementById('datePick').value=curDate;
+  document.getElementById('dowLabel').textContent='('+fmtDow(curDate)+')';
+  const s=getSheet(curDate);
+  document.getElementById('theme').value=s.theme||'';
+  renderDecisions(s);
+  renderTop3(s);
+  ['1','2','3','4'].forEach(i=>document.getElementById('ev'+i).value=s.ev['e'+i]||'');
+  ['q1','q2','q3','q4','q5','q6'].forEach(q=>{const el=document.querySelector('[data-best="'+q+'"]');if(el)el.value=s.best[q]||'';});
+  document.getElementById('bConsult').value=s.brief.consult||'';
+  renderBriefing();
+}
+function renderDecisions(s){
+  const box=document.getElementById('decisions');box.innerHTML='';
+  DECISIONS.forEach((d,i)=>{
+    const k='d'+i;const v=s.dec[k]||{text:'',action:'',status:'未着手',imp:d.imp};
+    const el=document.createElement('div');el.className='ditem'+(v.status==='完了'?' done':'')+(i<3?' open':'');
+    el.innerHTML=`
+      <div class="ditem-h">
+        <span class="num">${d.n}</span><span class="lab">${d.label}</span>
+        <span class="right"><span class="pill st-${v.status}">${v.status}</span>
+          <span class="pill imp-${v.imp}">重要度${v.imp}</span><span class="chev">▶</span></span>
+        <span class="sub">${d.sub}</span></div>
+      <div class="ditem-b">
+        <div class="fld"><label>記入欄</label><textarea data-k="${k}" data-f="text" placeholder="${d.sub}">${v.text||''}</textarea></div>
+        <div class="row2">
+          <div class="fld"><label>具体アクション／期限／担当</label><textarea data-k="${k}" data-f="action">${v.action||''}</textarea></div>
+          <div>
+            <div class="fld"><label>確認状況</label><select class="mini-sel" data-k="${k}" data-f="status">${STATUS.map(o=>`<option ${o===v.status?'selected':''}>${o}</option>`).join('')}</select></div>
+            <div class="fld"><label>重要度</label><select class="mini-sel" data-k="${k}" data-f="imp">${IMP.map(o=>`<option ${o===v.imp?'selected':''}>${o}</option>`).join('')}</select></div>
+          </div></div></div>`;
+    el.querySelector('.ditem-h').addEventListener('click',()=>el.classList.toggle('open'));
+    box.appendChild(el);
+  });
+}
+function renderTop3(s){
+  const tb=document.getElementById('top3Body');tb.innerHTML='';
+  if(s.top3.length===0)s.top3=[mkAct('高'),mkAct('高'),mkAct('中')];
+  s.top3.forEach((r,i)=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML=`
+      <td class="tnum">${i+1}</td>
+      <td><select data-i="${i}" data-f="cls">${CLASSES.map(o=>`<option ${o===r.cls?'selected':''}>${o||'—'}</option>`).join('')}</select></td>
+      <td><textarea data-i="${i}" data-f="what">${r.what||''}</textarea></td>
+      <td><input data-i="${i}" data-f="who" value="${esc(r.who)}"></td>
+      <td><input type="date" data-i="${i}" data-f="due" value="${r.due||''}"></td>
+      <td><select data-i="${i}" data-f="status">${STATUS.map(o=>`<option ${o===r.status?'selected':''}>${o}</option>`).join('')}</select></td>
+      <td><select data-i="${i}" data-f="imp">${IMP.map(o=>`<option ${o===r.imp?'selected':''}>${o}</option>`).join('')}</select></td>
+      <td><textarea data-i="${i}" data-f="memo">${r.memo||''}</textarea></td>
+      <td><button class="del-btn" data-del="${i}">×</button></td>`;
+    tb.appendChild(tr);
+  });
+}
+function mkAct(imp){return{cls:'',what:'',who:'',due:'',status:'未着手',imp:imp||'中',memo:''};}
+
+/* ================= Briefing ================= */
+function renderBriefing(){
+  const ev=store.cal.events||[];const synced=store.cal.syncedDate===curDate;
+  const sch=document.getElementById('bSchedule');
+  if(synced&&ev.length){
+    sch.innerHTML=ev.map(e=>{
+      const imp=store.cal.important[e.id];
+      return `<div class="ev"><span class="t">${e.time}</span><div class="body">
+        <span class="ttl">${e.title}</span>${imp?'<span class="badge imp">重要</span>':''}
+        <button class="toggle-imp" data-impid="${e.id}">${imp?'重要解除':'重にする'}</button>
+        <div class="meta">${e.attendees?('参加: '+e.attendees):'参加者なし'}</div>
+        <input class="gg-in goal" data-goalid="${e.id}" placeholder="ゴールイメージ（何が出ていれば最も価値があるか）" value="${esc(store.cal.goals[e.id]||'')}">
+        <input class="gg-in give" data-giveid="${e.id}" placeholder="GIVEできること（情報・紹介・判断・後押し）" value="${esc(store.cal.gives[e.id]||'')}">
+      </div></div>`;
+    }).join('');
+  }else if(synced){sch.innerHTML='<div class="empty">今日の予定はありません</div>';}
+  else{sch.innerHTML='<div class="empty">「カレンダーを同期」すると、各予定にゴールとGIVEを書き込めます</div>';}
+
+  const keys=ev.filter(e=>store.cal.important[e.id]);
+  const ac=document.getElementById('bActionCands');const cands=[];
+  keys.forEach(e=>cands.push(`「${e.title}」の事前準備（ゴール・論点・決める人を明確に）`));
+  (store.stalled||[]).filter(s=>(+s.days||0)>=20).sort((a,b)=>(+b.days)-(+a.days)).slice(0,3)
+    .forEach(s=>cands.push(`停滞${s.days}日「${s.name}」を${s.owner||'担当'}と確認し、今日中に次の一手を決める`));
+  ac.innerHTML=cands.length?cands.map(c=>`<div class="ev"><span class="t">▶</span><div class="body">${c}</div></div>`).join(''):'<div class="empty">重要会議・20日超過案件があると候補が出ます</div>';
+
+  const hint=document.getElementById('bConsultHint');const people=new Set();
+  keys.forEach(e=>(e.attendeesArr||[]).forEach(p=>people.add(p)));
+  hint.textContent=people.size?('会議参加者ヒント: '+[...people].slice(0,6).join('、')):'';
+
+  const st=document.getElementById('bStalled');
+  const ss=(store.stalled||[]).filter(s=>s.name).sort((a,b)=>(+b.days||0)-(+a.days||0));
+  st.innerHTML=ss.length?ss.slice(0,5).map(s=>{const over=(+s.days||0)>=20;
+    return `<div class="ev"><span class="t" style="color:${over?'var(--red)':'var(--navy2)'}">${s.days||0}日</span>
+    <div class="body"><span class="ttl">${s.name}</span>${over?'<span class="badge imp">20日超過</span>':''}
+    <div class="meta">${s.owner||''} ${s.note?('｜'+s.note):''}</div></div></div>`;}).join(''):'<div class="empty">「停滞案件」タブで登録してください</div>';
+}
+
+document.getElementById('view-today').addEventListener('click',e=>{
+  if(e.target.dataset.impid){store.cal.important[e.target.dataset.impid]=!store.cal.important[e.target.dataset.impid];save();renderBriefing();}
+  if(e.target.dataset.del!==undefined){getSheet(curDate).top3.splice(+e.target.dataset.del,1);save();renderTop3(getSheet(curDate));renderDash();}
+});
+document.getElementById('view-today').addEventListener('input',e=>{
+  const t=e.target;const s=getSheet(curDate);
+  if(t.dataset.goalid){store.cal.goals[t.dataset.goalid]=t.value;save();return;}
+  if(t.dataset.giveid){store.cal.gives[t.dataset.giveid]=t.value;save();return;}
+  if(t.id==='theme'){s.theme=t.value;save();return;}
+  if(t.id==='bConsult'){s.brief.consult=t.value;save();return;}
+  if(['ev1','ev2','ev3','ev4'].includes(t.id)){s.ev['e'+t.id.slice(2)]=t.value;save();return;}
+  if(t.dataset.best){s.best[t.dataset.best]=t.value;save();return;}
+  if(t.dataset.k){const k=t.dataset.k;s.dec[k]=s.dec[k]||{text:'',action:'',status:'未着手',imp:'中'};
+    s.dec[k][t.dataset.f]=t.value;save();if(t.dataset.f==='status'||t.dataset.f==='imp')renderDecisions(s);return;}
+  if(t.dataset.i!==undefined){const i=+t.dataset.i;s.top3[i]=s.top3[i]||mkAct();
+    s.top3[i][t.dataset.f]=(t.dataset.f==='cls'&&t.value==='—')?'':t.value;save();renderDash();return;}
+});
+document.getElementById('datePick').addEventListener('change',e=>{curDate=e.target.value;renderToday();});
+document.getElementById('prevDay').onclick=()=>{curDate=shift(curDate,-1);renderToday();};
+document.getElementById('nextDay').onclick=()=>{curDate=shift(curDate,1);renderToday();};
+document.getElementById('goToday').onclick=()=>{curDate=todayStr();renderToday();};
+document.getElementById('addTop3').onclick=()=>{getSheet(curDate).top3.push(mkAct());save();renderTop3(getSheet(curDate));};
+
+/* ================= Purpose / Quarter ================= */
+const MONTH_DEFAULT=['今月','来月','再来月'];
+function renderPurpose(){
+  document.querySelectorAll('[data-pp]').forEach(el=>{el.value=store.purpose[el.dataset.pp]||'';});
+  // months
+  if(!store.quarter.months||store.quarter.months.length<3){
+    store.quarter.months=[0,1,2].map(i=>(store.quarter.months&&store.quarter.months[i])||{label:MONTH_DEFAULT[i],intent:''});
+  }
+  const mg=document.getElementById('monthGrid');mg.innerHTML='';
+  store.quarter.months.forEach((m,i)=>{
+    const box=document.createElement('div');box.className='month-box';
+    box.innerHTML=`<input class="ml" data-mi="${i}" data-mf="label" value="${esc(m.label)}">
+      <textarea data-mi="${i}" data-mf="intent" placeholder="この月は、何を意図すると価値があるか">${m.intent||''}</textarea>`;
+    mg.appendChild(box);
+  });
+  renderKgi();
+}
+function renderKgi(){
+  const tb=document.getElementById('kgiBody');tb.innerHTML='';
+  if(!store.quarter.kgi||!store.quarter.kgi.length)store.quarter.kgi=[{type:'KGI',name:'',target:'',actual:''},{type:'KPI',name:'',target:'',actual:''}];
+  store.quarter.kgi.forEach((r,i)=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td><select data-ki="${i}" data-kf="type"><option ${r.type==='KGI'?'selected':''}>KGI</option><option ${r.type==='KPI'?'selected':''}>KPI</option></select></td>
+      <td><input data-ki="${i}" data-kf="name" value="${esc(r.name)}" placeholder="指標名"></td>
+      <td><input data-ki="${i}" data-kf="target" value="${esc(r.target)}"></td>
+      <td><input data-ki="${i}" data-kf="actual" value="${esc(r.actual)}"></td>
+      <td><button class="del-btn" data-kdel="${i}">×</button></td>`;
+    tb.appendChild(tr);
+  });
+}
+document.getElementById('view-purpose').addEventListener('input',e=>{
+  const t=e.target;
+  if(t.dataset.pp){store.purpose[t.dataset.pp]=t.value;save();return;}
+  if(t.dataset.mi!==undefined){store.quarter.months[+t.dataset.mi][t.dataset.mf]=t.value;save();return;}
+  if(t.dataset.ki!==undefined){store.quarter.kgi[+t.dataset.ki][t.dataset.kf]=t.value;save();return;}
+});
+document.getElementById('view-purpose').addEventListener('click',e=>{
+  if(e.target.dataset.kdel!==undefined){store.quarter.kgi.splice(+e.target.dataset.kdel,1);save();renderKgi();}
+});
+document.getElementById('addKgi').onclick=()=>{store.quarter.kgi.push({type:'KPI',name:'',target:'',actual:''});save();renderKgi();};
+
+/* ================= Problem ================= */
+function renderProblem(){
+  if(!store.problem.date)store.problem.date=todayStr();
+  document.querySelectorAll('[data-pb]').forEach(el=>{el.value=store.problem[el.dataset.pb]||'';});
+}
+document.getElementById('view-problem').addEventListener('input',e=>{
+  if(e.target.dataset.pb){store.problem[e.target.dataset.pb]=e.target.value;save();}
+});
+document.getElementById('clearProblem').onclick=()=>{
+  if(confirm('現在の問題解決シートをクリアして新しく書き直しますか？'))
+  {store.problem={date:todayStr()};save();renderProblem();toast('クリアしました');}
+};
+document.getElementById('copyProblem').onclick=()=>{
+  const p=store.problem;const L=[`【問題解決】${p.title||''}（${p.date||''}）`,'',
+   '■問題の分解：'+(p.p1||''),'■誰に相談すると解決するか：'+(p.p2||''),'■その人なら：'+(p.p3||''),
+   '■どうすれば絶対に解決するか：'+(p.p4||''),'■原理原則・正しいやり方：'+(p.p5||''),'■実践と見落とし：'+(p.p6||''),
+   '■問題を引き起こす問題：'+(p.q1||''),'■社内トップの動き：'+(p.q2||''),'■同業他社トップ：'+(p.q3||''),
+   '■異業種トップ：'+(p.q4||''),'■前提条件：'+(p.q5||''),'■繰り返さないために変えること：'+(p.q6||'')];
+  navigator.clipboard.writeText(L.join('\n')).then(()=>toast('コピーしました')).catch(()=>toast('コピー失敗'));
+};
+
+/* ================= Dashboard ================= */
+function renderDash(){
+  const t3=getSheet(curDate).top3||[];
+  const done=t3.filter(r=>r.status==='完了').length,prog=t3.filter(r=>r.status==='進行中').length,
+    not=t3.filter(r=>r.status==='未着手').length,cons=t3.filter(r=>r.status==='要相談').length,
+    open=t3.filter(r=>r.status!=='完了'&&r.what).length,high=t3.filter(r=>r.imp==='高'&&r.status!=='完了'&&r.what).length;
+  set('kTotal',t3.filter(r=>r.what).length);set('kDone',done);set('kOpen',open);set('kHigh',high);
+  set('sDone',done);set('sProg',prog);set('sNot',not);set('sCons',cons);set('sHigh',high);
+}
+function set(id,v){document.getElementById(id).textContent=v;}
+
+/* ================= Weekly ================= */
+function renderWeekly(){
+  document.getElementById('weekLabel').textContent=weekLabel(curWeek);
+  const w=store.weekly[curWeek]||{};
+  document.querySelectorAll('[data-wk]').forEach(t=>{t.value=w[t.dataset.wk]||'';});
+}
+document.getElementById('view-weekly').addEventListener('input',e=>{
+  if(e.target.dataset.wk){store.weekly[curWeek]=store.weekly[curWeek]||{};store.weekly[curWeek][e.target.dataset.wk]=e.target.value;save();}
+});
+document.getElementById('prevWeek').onclick=()=>{curWeek=shift(curWeek,-7);renderWeekly();};
+document.getElementById('nextWeek').onclick=()=>{curWeek=shift(curWeek,7);renderWeekly();};
+document.getElementById('thisWeek').onclick=()=>{curWeek=weekKey(new Date());renderWeekly();};
+
+/* ================= Stalled ================= */
+function renderStalled(){
+  const tb=document.getElementById('stalledBody');tb.innerHTML='';
+  if(!store.stalled.length)store.stalled.push({name:'',owner:'',days:'',note:''});
+  store.stalled.forEach((r,i)=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td><input data-si="${i}" data-f="name" value="${esc(r.name)}" placeholder="案件名"></td>
+      <td><input data-si="${i}" data-f="owner" value="${esc(r.owner)}" placeholder="担当/部門"></td>
+      <td><input type="number" data-si="${i}" data-f="days" value="${r.days||''}" style="max-width:70px"></td>
+      <td><textarea data-si="${i}" data-f="note">${r.note||''}</textarea></td>
+      <td><button class="del-btn" data-sdel="${i}">×</button></td>`;
+    tb.appendChild(tr);
+  });
+}
+document.getElementById('view-stalled').addEventListener('input',e=>{
+  if(e.target.dataset.si!==undefined)store.stalled[+e.target.dataset.si][e.target.dataset.f]=e.target.value,save();
+});
+document.getElementById('view-stalled').addEventListener('click',e=>{
+  if(e.target.dataset.sdel!==undefined){store.stalled.splice(+e.target.dataset.sdel,1);save();renderStalled();}
+});
+document.getElementById('addStalled').onclick=()=>{store.stalled.push({name:'',owner:'',days:'',note:''});save();renderStalled();};
+
+/* ================= Google Calendar ================= */
+let tokenClient=null,accessToken=null;
+function initToken(){
+  const cid=store.settings.clientId;
+  if(!cid||!window.google||!google.accounts)return;
+  tokenClient=google.accounts.oauth2.initTokenClient({
+    client_id:cid,scope:'https://www.googleapis.com/auth/calendar.readonly',
+    callback:(resp)=>{accessToken=resp.access_token;setCalStatus(true);toast('接続しました');syncCalendar();}});
+}
+function setCalStatus(on){document.getElementById('calDot').classList.toggle('on',on);
+  document.getElementById('calLabel').textContent=on?'カレンダー接続中':'カレンダー未連携';}
+document.getElementById('clientId').value=store.settings.clientId||'';
+document.getElementById('saveClientId').onclick=()=>{store.settings.clientId=document.getElementById('clientId').value.trim();save();initToken();toast('クライアントIDを保存しました');};
+document.getElementById('connectBtn').onclick=()=>{
+  if(!store.settings.clientId){toast('先にクライアントIDを保存してください');return;}
+  if(!tokenClient)initToken();
+  if(!tokenClient){toast('Google読み込み中。数秒後に再度お試しください');return;}
+  tokenClient.requestAccessToken({prompt:'consent'});};
+document.getElementById('disconnectBtn').onclick=()=>{accessToken=null;setCalStatus(false);toast('接続を解除しました');};
+document.getElementById('syncBtn2').onclick=syncCalendar;
+document.getElementById('syncCalBtn').onclick=()=>{
+  if(!accessToken){toast('先にカレンダー連携タブで接続してください');document.querySelector('[data-v=calendar]').click();return;}
+  syncCalendar();};
+async function syncCalendar(){
+  if(!accessToken){toast('未接続です');return;}
+  const tz=Intl.DateTimeFormat().resolvedOptions().timeZone;
+  const min=new Date(curDate+'T00:00:00'),max=new Date(curDate+'T23:59:59');
+  const url=`https://www.googleapis.com/calendar/v3/calendars/primary/events?timeMin=${encodeURIComponent(min.toISOString())}&timeMax=${encodeURIComponent(max.toISOString())}&singleEvents=true&orderBy=startTime&timeZone=${tz}`;
+  try{
+    const r=await fetch(url,{headers:{Authorization:'Bearer '+accessToken}});
+    if(!r.ok){toast('取得失敗（再接続が必要かも）');return;}
+    const data=await r.json();
+    store.cal.events=(data.items||[]).map(it=>{
+      const time=it.start.dateTime?new Date(it.start.dateTime).toTimeString().slice(0,5):'終日';
+      const arr=(it.attendees||[]).map(a=>a.displayName||a.email).filter(Boolean);
+      return{id:it.id,title:it.summary||'(無題)',time,attendees:arr.join('、'),attendeesArr:arr};});
+    store.cal.syncedDate=curDate;save();
+    setCalStatus(true);renderBriefing();renderCalRaw();toast('同期しました（'+store.cal.events.length+'件）');
+  }catch(e){toast('通信エラー');}
+}
+function renderCalRaw(){
+  const el=document.getElementById('calRaw');const ev=store.cal.events||[];
+  if(!ev.length||store.cal.syncedDate!==curDate){el.innerHTML='<div class="empty">まだ同期されていません（今日の日付で同期してください）</div>';return;}
+  el.innerHTML=ev.map(e=>`<div class="ev"><span class="t">${e.time}</span><div class="body"><span class="ttl">${e.title}</span><div class="meta">${e.attendees||'参加者なし'}</div></div></div>`).join('');
+}
+
+/* copy briefing */
+document.getElementById('copyBriefBtn').onclick=()=>{
+  const s=getSheet(curDate);const ev=store.cal.events||[];const keys=ev.filter(e=>store.cal.important[e.id]);
+  let txt=`【社長 朝のブリーフィング】${curDate}(${fmtDow(curDate)})\n`;
+  if(s.theme)txt+=`本日の経営テーマ：${s.theme}\n`;
+  txt+=`\n■今日の仕事（予定・ゴール・GIVE）\n`+(ev.length?ev.map(e=>{
+    let l=`・${e.time} ${e.title}${store.cal.important[e.id]?' ★重要':''}`;
+    if(store.cal.goals[e.id])l+=`\n　ゴール：${store.cal.goals[e.id]}`;
+    if(store.cal.gives[e.id])l+=`\n　GIVE：${store.cal.gives[e.id]}`;
+    return l;}).join('\n'):'・予定なし');
+  const cands=[];keys.forEach(e=>cands.push(`「${e.title}」の事前準備`));
+  (store.stalled||[]).filter(x=>(+x.days||0)>=20).forEach(x=>cands.push(`停滞${x.days}日「${x.name}」の次の一手を決める`));
+  txt+=`\n\n■最重要アクション候補\n`+(cands.length?cands.map(c=>'・'+c).join('\n'):'・なし');
+  txt+=`\n\n■相談すべき人\n${s.brief.consult||'(未記入)'}`;
+  const ss=(store.stalled||[]).filter(x=>x.name).sort((a,b)=>(+b.days||0)-(+a.days||0));
+  txt+=`\n\n■注意すべき停滞案件\n`+(ss.length?ss.map(x=>`・${x.days||0}日 ${x.name} ${x.owner||''}`).join('\n'):'・なし');
+  navigator.clipboard.writeText(txt).then(()=>toast('ブリーフィングをコピーしました')).catch(()=>toast('コピー失敗'));
+};
+
+/* ================= Boot ================= */
+renderToday();renderDash();renderCalRaw();
+window.addEventListener('load',()=>setTimeout(initToken,800));
+</script>
+</body>
+</html>
