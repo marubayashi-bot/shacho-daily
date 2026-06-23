@@ -170,6 +170,16 @@ td textarea{min-height:36px;resize:vertical}
 .btn-out{background:#fff;border:1px solid var(--line);color:var(--navy)}
 .btn-ghost{background:var(--soft);color:var(--navy)}
 .inp{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:9px;background:#fff}
+.calchk-list{display:flex;flex-direction:column;gap:8px}
+.calchk{display:flex;align-items:center;gap:9px;font-size:13px;background:#fbfcfe;border:1px solid var(--line);border-radius:9px;padding:9px 12px;cursor:pointer}
+.calchk input{width:16px;height:16px}
+.writeout{margin-top:16px;border-top:1px dashed var(--line);padding-top:14px}
+.writeout-h{font-size:12.5px;font-weight:700;color:var(--navy);margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.wrow{display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:#fbfcfe;border:1px solid var(--line);border-radius:9px;padding:8px 12px;margin-bottom:8px}
+.wtxt{flex:1;min-width:160px;font-size:13px}
+.wdate{font-size:11.5px;color:var(--muted);font-variant-numeric:tabular-nums}
+.wrow input[type=time]{padding:6px 8px;border:1px solid var(--line);border-radius:7px}
+.wbtn{padding:7px 14px}
 .how th{width:120px}
 .toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--navy);color:#fff;padding:11px 22px;border-radius:30px;font-size:13px;font-weight:600;opacity:0;transition:.3s;z-index:99;box-shadow:0 8px 24px rgba(16,36,63,.3)}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
@@ -262,6 +272,10 @@ td textarea{min-height:36px;resize:vertical}
         <tbody id="top3Body"></tbody>
       </table></div>
       <button class="add-row" id="addTop3">＋ 行を追加</button>
+      <div class="writeout">
+        <div class="writeout-h">📅 最重要アクションを Googleカレンダー（0000自分のTODO）に書き出す</div>
+        <div id="writeoutList"><div class="empty">内容を入力したアクションが、ここに書き出し候補として並びます</div></div>
+      </div>
     </div>
   </div>
 
@@ -442,7 +456,19 @@ td textarea{min-height:36px;resize:vertical}
       </div>
       <p style="font-size:12px;color:var(--muted);margin-top:12px">
         ※ クライアントIDはこの端末のブラウザ内にのみ保存されます。<br>
+        ※ 予定の書き出し（最重要アクション登録）を使うため、接続時にカレンダーの<b>読み書き許可</b>を求めます。<br>
         ※「毎朝5:30に無人で自動配信」したい場合は、別ファイルの <b>Google Apps Script</b> をご利用ください（Chatworkに自動投稿）。</p>
+    </div>
+  </div>
+  <div class="card"><div class="card-h"><span class="ic">🗂</span><h2>表示・書き込み設定</h2>
+    <span class="hint">表示するカレンダーと、書き込み先（0000自分のTODO）を選びます</span></div>
+    <div class="card-b">
+      <div class="fld"><label>表示するカレンダー（チェックした予定をブリーフィングに表示）</label>
+        <div id="calDisplayList" class="calchk-list"><div class="empty">接続するとカレンダー一覧が出ます</div></div></div>
+      <div class="fld" style="max-width:460px"><label>📥 書き込み先カレンダー（最重要アクションの書き出し先）</label>
+        <select class="inp" id="calWriteSel"><option value="">（未接続）</option></select>
+        <p style="font-size:11.5px;color:var(--red);margin-top:6px;font-weight:600">共有されている「丸林信宏」ではなく、必ず「0000自分のTODO」を選んでください。</p></div>
+      <button class="btn btn-ghost" id="reloadCalsBtn">🔄 カレンダー一覧を再取得</button>
     </div>
   </div>
   <div class="card"><div class="card-h"><span class="ic">⚙️</span><h2>同期した今日の予定</h2></div>
@@ -484,7 +510,7 @@ const DOW=['日','月','火','水','木','金','土'];
 let store=load();
 function load(){try{const s=JSON.parse(localStorage.getItem(KEY));return s?migrate(s):blank()}catch(e){return blank()}}
 function blank(){return{sheets:{},weekly:{},stalled:[],purpose:{},quarter:{months:[],kgi:[]},problem:{},
-  settings:{clientId:''},cal:{events:[],important:{},goals:{},gives:{},syncedDate:null}}}
+  settings:{clientId:''},cal:{events:[],important:{},goals:{},gives:{},syncedDate:null,calendars:[],displayCals:[],writeCalId:''}}}
 function migrate(s){const b=blank();return Object.assign(b,s,{cal:Object.assign(b.cal,s.cal||{}),
   purpose:s.purpose||{},quarter:s.quarter||{months:[],kgi:[]},problem:s.problem||{}});}
 function save(){localStorage.setItem(KEY,JSON.stringify(store));}
@@ -516,6 +542,7 @@ function weekKey(d){const t=new Date(d);const day=(t.getDay()+6)%7;t.setDate(t.g
 function weekLabel(k){const s=new Date(k+'T00:00:00');const e=new Date(s);e.setDate(e.getDate()+6);
   const f=x=>(x.getMonth()+1)+'/'+x.getDate();return f(s)+' 〜 '+f(e)+' の週';}
 function esc(s){return(s||'').replace(/"/g,'&quot;');}
+function escH(s){return(s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
 
 /* ================= Nav ================= */
 document.getElementById('nav').addEventListener('click',e=>{
@@ -589,6 +616,7 @@ function renderTop3(s){
       <td><button class="del-btn" data-del="${i}">×</button></td>`;
     tb.appendChild(tr);
   });
+  renderWriteOut();
 }
 function mkAct(imp){return{cls:'',what:'',who:'',due:'',status:'未着手',imp:imp||'中',memo:''};}
 
@@ -602,7 +630,7 @@ function renderBriefing(){
       return `<div class="ev"><span class="t">${e.time}</span><div class="body">
         <span class="ttl">${e.title}</span>${imp?'<span class="badge imp">重要</span>':''}
         <button class="toggle-imp" data-impid="${e.id}">${imp?'重要解除':'重にする'}</button>
-        <div class="meta">${e.attendees?('参加: '+e.attendees):'参加者なし'}</div>
+        <div class="meta">${e.cal?('['+escH(e.cal)+'] '):''}${e.attendees?('参加: '+e.attendees):''}</div>
         <input class="gg-in goal" data-goalid="${e.id}" placeholder="ゴールイメージ（何が出ていれば最も価値があるか）" value="${esc(store.cal.goals[e.id]||'')}">
         <input class="gg-in give" data-giveid="${e.id}" placeholder="GIVEできること（情報・紹介・判断・後押し）" value="${esc(store.cal.gives[e.id]||'')}">
       </div></div>`;
@@ -766,8 +794,8 @@ function initToken(){
   const cid=store.settings.clientId;
   if(!cid||!window.google||!google.accounts)return;
   tokenClient=google.accounts.oauth2.initTokenClient({
-    client_id:cid,scope:'https://www.googleapis.com/auth/calendar.readonly',
-    callback:(resp)=>{accessToken=resp.access_token;setCalStatus(true);toast('接続しました');syncCalendar();}});
+    client_id:cid,scope:'https://www.googleapis.com/auth/calendar',
+    callback:(resp)=>{accessToken=resp.access_token;setCalStatus(true);toast('接続しました');loadCalendars().then(syncCalendar);}});
 }
 function setCalStatus(on){document.getElementById('calDot').classList.toggle('on',on);
   document.getElementById('calLabel').textContent=on?'カレンダー接続中':'カレンダー未連携';}
@@ -779,31 +807,125 @@ document.getElementById('connectBtn').onclick=()=>{
   if(!tokenClient){toast('Google読み込み中。数秒後に再度お試しください');return;}
   tokenClient.requestAccessToken({prompt:'consent'});};
 document.getElementById('disconnectBtn').onclick=()=>{accessToken=null;setCalStatus(false);toast('接続を解除しました');};
+document.getElementById('reloadCalsBtn').onclick=()=>{if(!accessToken){toast('先に接続してください');return;}loadCalendars().then(()=>toast('カレンダー一覧を取得しました'));};
+document.getElementById('view-calendar').addEventListener('change',e=>{
+  if(e.target.dataset.dispcal){
+    const id=e.target.dataset.dispcal;const arr=store.cal.displayCals||[];
+    if(e.target.checked){if(!arr.includes(id))arr.push(id);}else{const k=arr.indexOf(id);if(k>=0)arr.splice(k,1);}
+    store.cal.displayCals=arr;save();
+  }
+  if(e.target.id==='calWriteSel'){store.cal.writeCalId=e.target.value;save();}
+});
+/* 書き出しボタン・時刻入力 */
+document.getElementById('view-today').addEventListener('click',async e=>{
+  if(e.target.dataset.writeone!==undefined){
+    e.target.disabled=true;const ok=await writeActionToCal(+e.target.dataset.writeone);e.target.disabled=false;
+    if(ok){toast('カレンダーに書き出しました');syncCalendar();}
+  }
+  if(e.target.id==='writeAllBtn'){
+    e.target.disabled=true;const s=getSheet(curDate);let n=0;
+    for(let i=0;i<(s.top3||[]).length;i++){if(s.top3[i].what&&s.top3[i].what.trim()){const ok=await writeActionToCal(i);if(ok)n++;}}
+    e.target.disabled=false;if(n)toast(n+'件を書き出しました');syncCalendar();
+  }
+});
+document.getElementById('view-today').addEventListener('input',e=>{
+  if(e.target.dataset.wtime!==undefined){const s=getSheet(curDate);s.wtime=s.wtime||{};s.wtime['t'+e.target.dataset.wtime]=e.target.value;save();}
+  if(e.target.dataset.i!==undefined&&e.target.dataset.f==='what')renderWriteOut();
+});
 document.getElementById('syncBtn2').onclick=syncCalendar;
 document.getElementById('syncCalBtn').onclick=()=>{
   if(!accessToken){toast('先にカレンダー連携タブで接続してください');document.querySelector('[data-v=calendar]').click();return;}
   syncCalendar();};
-async function syncCalendar(){
-  if(!accessToken){toast('未接続です');return;}
+async function loadCalendars(){
+  if(!accessToken)return;
+  try{
+    const r=await fetch('https://www.googleapis.com/calendar/v3/users/me/calendarList',{headers:{Authorization:'Bearer '+accessToken}});
+    if(!r.ok)return;
+    const data=await r.json();
+    store.cal.calendars=(data.items||[]).map(c=>({id:c.id,name:c.summary||c.id,primary:!!c.primary}));
+    if(!store.cal.displayCals||!store.cal.displayCals.length)
+      store.cal.displayCals=store.cal.calendars.map(c=>c.id);
+    save();renderCalSettings();
+  }catch(e){}
+}
+function renderCalSettings(){
+  const cals=store.cal.calendars||[];
+  const disp=document.getElementById('calDisplayList');
+  const write=document.getElementById('calWriteSel');
+  if(!cals.length){if(disp)disp.innerHTML='<div class="empty">接続するとカレンダー一覧が出ます</div>';if(write)write.innerHTML='<option value="">（未接続）</option>';return;}
+  if(disp)disp.innerHTML=cals.map(c=>`<label class="calchk"><input type="checkbox" data-dispcal="${escH(c.id)}" ${(store.cal.displayCals||[]).includes(c.id)?'checked':''}> ${escH(c.name)}${c.primary?'（メイン）':''}</label>`).join('');
+  if(write)write.innerHTML='<option value="">選択してください</option>'+cals.map(c=>`<option value="${escH(c.id)}" ${store.cal.writeCalId===c.id?'selected':''}>${escH(c.name)}</option>`).join('');
+}
+async function fetchEventsFor(calId,calName){
   const tz=Intl.DateTimeFormat().resolvedOptions().timeZone;
   const min=new Date(curDate+'T00:00:00'),max=new Date(curDate+'T23:59:59');
-  const url=`https://www.googleapis.com/calendar/v3/calendars/primary/events?timeMin=${encodeURIComponent(min.toISOString())}&timeMax=${encodeURIComponent(max.toISOString())}&singleEvents=true&orderBy=startTime&timeZone=${tz}`;
+  const url=`https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calId)}/events?timeMin=${encodeURIComponent(min.toISOString())}&timeMax=${encodeURIComponent(max.toISOString())}&singleEvents=true&orderBy=startTime&timeZone=${tz}`;
+  const r=await fetch(url,{headers:{Authorization:'Bearer '+accessToken}});
+  if(!r.ok)return [];
+  const data=await r.json();
+  return (data.items||[]).map(it=>{
+    const dt=it.start.dateTime;
+    const time=dt?new Date(dt).toTimeString().slice(0,5):'終日';
+    const sortKey=dt?new Date(dt).getTime():0;
+    const arr=(it.attendees||[]).map(a=>a.displayName||a.email).filter(Boolean);
+    return{id:calId+'::'+it.id,title:it.summary||'(無題)',time,sortKey,cal:calName,attendees:arr.join('、'),attendeesArr:arr};});
+}
+async function syncCalendar(){
+  if(!accessToken){toast('未接続です');return;}
+  let cals=(store.cal.calendars||[]).filter(c=>(store.cal.displayCals||[]).includes(c.id));
+  if(!cals.length)cals=[{id:'primary',name:'メイン'}];
   try{
-    const r=await fetch(url,{headers:{Authorization:'Bearer '+accessToken}});
-    if(!r.ok){toast('取得失敗（再接続が必要かも）');return;}
-    const data=await r.json();
-    store.cal.events=(data.items||[]).map(it=>{
-      const time=it.start.dateTime?new Date(it.start.dateTime).toTimeString().slice(0,5):'終日';
-      const arr=(it.attendees||[]).map(a=>a.displayName||a.email).filter(Boolean);
-      return{id:it.id,title:it.summary||'(無題)',time,attendees:arr.join('、'),attendeesArr:arr};});
-    store.cal.syncedDate=curDate;save();
-    setCalStatus(true);renderBriefing();renderCalRaw();toast('同期しました（'+store.cal.events.length+'件）');
+    let all=[];
+    for(const c of cals){const ev=await fetchEventsFor(c.id,c.name);all=all.concat(ev);}
+    all.sort((a,b)=>a.sortKey-b.sortKey);
+    store.cal.events=all;store.cal.syncedDate=curDate;save();
+    setCalStatus(true);renderBriefing();renderCalRaw();renderWriteOut();toast('同期しました（'+all.length+'件）');
   }catch(e){toast('通信エラー');}
+}
+/* 最重要アクションをカレンダーへ書き出す */
+async function writeActionToCal(i){
+  if(!accessToken){toast('先にカレンダーに接続してください');document.querySelector('[data-v=calendar]').click();return false;}
+  if(!store.cal.writeCalId){toast('「カレンダー連携」で書き込み先（0000自分のTODO）を選んでください');document.querySelector('[data-v=calendar]').click();return false;}
+  const s=getSheet(curDate);const r=s.top3[i];if(!r||!r.what||!r.what.trim()){toast('内容が空です');return false;}
+  const date=r.due||curDate;const tz=Intl.DateTimeFormat().resolvedOptions().timeZone;
+  s.wtime=s.wtime||{};const tm=s.wtime['t'+i];
+  const body={summary:'【最重要】'+r.what.trim(),
+    description:[r.who?('担当/相手：'+r.who):'',r.imp?('重要度：'+r.imp):'',r.cls?('分類：'+r.cls):'','（社長デイリーシートから登録）'].filter(Boolean).join('\n')};
+  const pad=n=>String(n).padStart(2,'0');
+  if(tm){
+    const start=date+'T'+tm+':00';
+    const e=new Date(new Date(start).getTime()+60*60*1000);
+    const endStr=e.getFullYear()+'-'+pad(e.getMonth()+1)+'-'+pad(e.getDate())+'T'+pad(e.getHours())+':'+pad(e.getMinutes())+':00';
+    body.start={dateTime:start,timeZone:tz};body.end={dateTime:endStr,timeZone:tz};
+  }else{
+    const nd=new Date(date+'T00:00:00');nd.setDate(nd.getDate()+1);
+    body.start={date:date};body.end={date:ymd(nd)};
+  }
+  try{
+    const res=await fetch('https://www.googleapis.com/calendar/v3/calendars/'+encodeURIComponent(store.cal.writeCalId)+'/events',
+      {method:'POST',headers:{Authorization:'Bearer '+accessToken,'Content-Type':'application/json'},body:JSON.stringify(body)});
+    if(!res.ok){toast('書き出し失敗（再接続が必要かも）');return false;}
+    return true;
+  }catch(e){toast('通信エラー');return false;}
+}
+function renderWriteOut(){
+  const el=document.getElementById('writeoutList');if(!el)return;
+  const s=getSheet(curDate);const acts=(s.top3||[]).map((r,i)=>({r,i})).filter(x=>x.r.what&&x.r.what.trim());
+  if(!acts.length){el.innerHTML='<div class="empty">内容を入力したアクションが、ここに書き出し候補として並びます</div>';return;}
+  s.wtime=s.wtime||{};
+  el.innerHTML=acts.map(({r,i})=>`
+    <div class="wrow">
+      <div class="wtxt"><b>${i+1}.</b> ${escH(r.what).slice(0,70)}</div>
+      <input type="time" data-wtime="${i}" value="${s.wtime['t'+i]||''}">
+      <span class="wdate">${r.due||curDate}</span>
+      <button class="btn btn-gold wbtn" data-writeone="${i}">書き出す</button>
+    </div>`).join('')
+    +`<button class="btn btn-pri" id="writeAllBtn" style="margin-top:6px">3つまとめて書き出す</button>`;
 }
 function renderCalRaw(){
   const el=document.getElementById('calRaw');const ev=store.cal.events||[];
   if(!ev.length||store.cal.syncedDate!==curDate){el.innerHTML='<div class="empty">まだ同期されていません（今日の日付で同期してください）</div>';return;}
-  el.innerHTML=ev.map(e=>`<div class="ev"><span class="t">${e.time}</span><div class="body"><span class="ttl">${e.title}</span><div class="meta">${e.attendees||'参加者なし'}</div></div></div>`).join('');
+  el.innerHTML=ev.map(e=>`<div class="ev"><span class="t">${e.time}</span><div class="body"><span class="ttl">${e.title}</span><div class="meta">${e.cal?('['+escH(e.cal)+'] '):''}${e.attendees||'参加者なし'}</div></div></div>`).join('');
 }
 
 /* copy briefing */
@@ -826,7 +948,7 @@ document.getElementById('copyBriefBtn').onclick=()=>{
 };
 
 /* ================= Boot ================= */
-renderToday();renderDash();renderCalRaw();
+renderToday();renderDash();renderCalRaw();renderCalSettings();
 window.addEventListener('load',()=>setTimeout(initToken,800));
 </script>
 </body>
